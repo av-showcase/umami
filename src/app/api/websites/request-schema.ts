@@ -31,6 +31,7 @@ export const createWebsiteRequestSchema = z
     domain: z.string().trim().regex(DOMAIN_REGEX).max(500),
     shareId: z.string().max(50).nullable().optional(),
     teamId: z.uuid().nullable().optional(),
+    groupId: z.uuid().nullable().optional(),
     id: z.uuid().nullable().optional(),
   })
   .meta({ id: 'CreateWebsiteRequest' });
@@ -40,6 +41,7 @@ export const updateWebsiteRequestSchema = z
     name: z.string().trim().min(1).max(100).optional(),
     domain: z.string().trim().regex(DOMAIN_REGEX).max(500).optional(),
     shareId: z.string().max(50).nullable().optional(),
+    groupId: z.uuid().nullable().optional(),
     replayConfig: replayConfigInputSchema.nullable().optional(),
   })
   .meta({ id: 'UpdateWebsiteRequest' });

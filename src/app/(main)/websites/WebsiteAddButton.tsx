@@ -7,7 +7,7 @@ import { DialogButton } from '@/components/input/DialogButton';
 import { WebsiteTrackingCode } from './[websiteId]/settings/WebsiteTrackingCode';
 import { WebsiteAddForm } from './WebsiteAddForm';
 
-export function WebsiteAddButton({ teamId, onSave }: { teamId: string; onSave?: () => void }) {
+export function WebsiteAddButton({ teamId, onSave }: { teamId?: string; onSave?: () => void }) {
   const { t, labels, messages } = useMessages();
   const { toast } = useToast();
   const { touch } = useModified();
@@ -18,6 +18,7 @@ export function WebsiteAddButton({ teamId, onSave }: { teamId: string; onSave?: 
   const handleSave = async (website: { id: string }) => {
     toast(t(messages.saved));
     touch('websites');
+    touch('website-groups');
     onSave?.();
 
     if (cloudMode) {

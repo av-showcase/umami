@@ -33,6 +33,8 @@ model User {
   twoFactorOtpUseds    TwoFactorOtpUsed[]
   twoFactorRateLimit   TwoFactorRateLimit?
   apiKeys              ApiKey[]
+  websiteGroups        WebsiteGroup[]        @relation("user")
+  createdGroups        WebsiteGroup[]        @relation("createGroup")
 
   @@map("user")
 }
@@ -102,6 +104,7 @@ model Website {
   resetAt   DateTime? @map("reset_at") @db.Timestamptz(6)
   userId    String?   @map("user_id") @db.Uuid
   teamId    String?   @map("team_id") @db.Uuid
+  groupId   String?   @map("group_id") @db.Uuid
   createdBy String?   @map("created_by") @db.Uuid
   createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -114,6 +117,7 @@ model Website {
   createUser          User?                @relation("createUser", fields: [createdBy], references: [id])
   team                Team?                @relation(fields: [teamId], references: [id])
   annotations         Annotation[]
+  group               WebsiteGroup?        @relation(fields: [groupId], references: [id])
   eventData           EventData[]
   reports             Report[]
   revenue             Revenue[]
@@ -125,9 +129,34 @@ model Website {
 
   @@index([userId])
   @@index([teamId])
+  @@index([groupId])
   @@index([createdAt])
   @@index([createdBy])
   @@map("website")
+}
+
+model WebsiteGroup {
+  id        String    @id() @map("group_id") @db.Uuid
+  name      String    @db.VarChar(100)
+  parentId  String?   @map("parent_id") @db.Uuid
+  userId    String?   @map("user_id") @db.Uuid
+  teamId    String?   @map("team_id") @db.Uuid
+  createdBy String?   @map("created_by") @db.Uuid
+  createdAt DateTime? @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user      User?          @relation("user", fields: [userId], references: [id])
+  createUser User?         @relation("createGroup", fields: [createdBy], references: [id])
+  team      Team?          @relation(fields: [teamId], references: [id])
+  parent    WebsiteGroup?  @relation("WebsiteGroupHierarchy", fields: [parentId], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  children  WebsiteGroup[] @relation("WebsiteGroupHierarchy")
+  websites  Website[]
+
+  @@index([userId])
+  @@index([teamId])
+  @@index([parentId])
+  @@index([createdAt])
+  @@map("website_group")
 }
 
 model WebsiteEvent {
@@ -239,11 +268,12 @@ model Team {
   updatedAt         DateTime? @updatedAt @map("updated_at") @db.Timestamptz(6)
   deletedAt         DateTime? @map("deleted_at") @db.Timestamptz(6)
 
-  websites Website[]
-  members  TeamUser[]
-  links    Link[]
-  pixels   Pixel[]
-  boards   Board[]
+  websites      Website[]
+  websiteGroups WebsiteGroup[]
+  members       TeamUser[]
+  links         Link[]
+  pixels        Pixel[]
+  boards        Board[]
 
   @@index([accessCode])
   @@map("team")
