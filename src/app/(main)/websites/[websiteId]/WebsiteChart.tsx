@@ -5,14 +5,20 @@ import { LoadingPanel } from '@/components/common/LoadingPanel';
 import {
   useDateParameters,
   useDateRange,
+  useMessages,
   useNavigation,
   useTimezone,
   useWebsiteAnnotationsQuery,
 } from '@/components/hooks';
 import { useWebsitePageviewsQuery } from '@/components/hooks/queries/useWebsitePageviewsQuery';
+import { MetricSeriesChart, type MetricSeriesKind } from '@/components/metrics/MetricSeriesChart';
 import { PageviewsChart } from '@/components/metrics/PageviewsChart';
 import { type AnnotationRange, getAnnotationDateRangeValue } from '@/lib/annotations';
 import { DATE_FUNCTIONS } from '@/lib/date';
+
+export type WebsiteChartMetric = 'pageviews' | MetricSeriesKind;
+
+export const DEFAULT_WEBSITE_CHART_METRIC: WebsiteChartMetric = 'pageviews';
 
 export function WebsiteChart({
   websiteId,
@@ -31,7 +37,9 @@ export function WebsiteChart({
   const { dateRange, dateCompare } = useDateRange({ timezone: timezone });
   const { startDate, endDate, unit, value } = dateRange;
   const { startAt, endAt } = useDateParameters();
-  const { router, updateParams } = useNavigation();
+  const { router, updateParams, query } = useNavigation();
+  const metric = (query.metric as WebsiteChartMetric) ?? DEFAULT_WEBSITE_CHART_METRIC;
+  const { t, labels } = useMessages();
   const { data: annotationData } = useWebsiteAnnotationsQuery(
     websiteId,
     { startAt, endAt, pageSize: 1000 },
@@ -40,12 +48,15 @@ export function WebsiteChart({
   const { data, isLoading, isFetching, error } = useWebsitePageviewsQuery({
     websiteId,
     compare: compareMode ? dateCompare?.compare : undefined,
+    // Only ask the server for the session-series metrics when they are
+    // actually selected; otherwise the server skips the third DB query.
+    metric: metric === 'pageviews' ? undefined : metric,
   });
-  const { pageviews, sessions, compare } = (data || {}) as any;
+  const { pageviews, sessions, bouncerate, visitduration, compare } = (data || {}) as any;
   const canDrillIntoAnnotation =
     unit !== 'hour' && unit !== 'minute' && !isSameDay(startDate, endDate);
 
-  const chartData = useMemo(() => {
+  const pageviewsChartData = useMemo(() => {
     if (!data) {
       return { pageviews: [], sessions: [] };
     }
@@ -132,19 +143,56 @@ export function WebsiteChart({
     [localToUtc, onAnnotationMoreClick, unit],
   );
 
+  const metricChartData = useMemo(() => {
+    if (!data || metric === 'pageviews') return null;
+
+    const series = metric === 'bouncerate' ? bouncerate : visitduration;
+    const compareSeries = compare
+      ? metric === 'bouncerate'
+        ? compare.bouncerate
+        : compare.visitduration
+      : null;
+
+    return {
+      series: series ?? [],
+      ...(compareSeries && {
+        compare: series.map(({ x }, i) => ({
+          x,
+          y: compareSeries[i]?.y ?? 0,
+          d: compareSeries[i]?.x,
+        })),
+      }),
+    };
+  }, [data, metric, bouncerate, visitduration, compare]);
+
   return (
     <LoadingPanel data={data} isFetching={isFetching} isLoading={isLoading} error={error}>
-      <PageviewsChart
-        key={value}
-        data={chartData}
-        legendActions={legendActions}
-        minDate={startDate}
-        maxDate={endDate}
-        unit={unit}
-        annotations={annotations}
-        onAnnotationClick={handleAnnotationClick}
-        onAnnotationMoreClick={onAnnotationMoreClick ? handleAnnotationMoreClick : undefined}
-      />
+      {metric === 'pageviews' ? (
+        <PageviewsChart
+          key={`${value}-pageviews`}
+          data={pageviewsChartData}
+          legendActions={legendActions}
+          minDate={startDate}
+          maxDate={endDate}
+          unit={unit}
+          annotations={annotations}
+          onAnnotationClick={handleAnnotationClick}
+          onAnnotationMoreClick={onAnnotationMoreClick ? handleAnnotationMoreClick : undefined}
+        />
+      ) : (
+        <MetricSeriesChart
+          key={`${value}-${metric}`}
+          data={metricChartData}
+          minDate={startDate}
+          maxDate={endDate}
+          unit={unit}
+          kind={metric}
+          label={metric === 'bouncerate' ? t(labels.bounceRate) : t(labels.visitDuration)}
+          comparePreviousLabel={`${
+            metric === 'bouncerate' ? t(labels.bounceRate) : t(labels.visitDuration)
+          } (${t(labels.previous)})`}
+        />
+      )}
     </LoadingPanel>
   );
 }
