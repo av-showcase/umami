@@ -1,10 +1,12 @@
 'use client';
-import { Column, Row } from '@umami/react-zen';
+import { Column, Heading, Row } from '@umami/react-zen';
 import { useState } from 'react';
 import { ExpandedViewModal } from '@/app/(main)/websites/[websiteId]/ExpandedViewModal';
 import { Panel } from '@/components/common/Panel';
+import { useMessages } from '@/components/hooks';
 import { DialogButton } from '@/components/input/DialogButton';
 import { UnitFilter } from '@/components/input/UnitFilter';
+import { WeeklyTraffic } from '@/components/metrics/WeeklyTraffic';
 import type { AnnotationRange } from '@/lib/annotations';
 import { AnnotationsButton } from './annotations/AnnotationsButton';
 import { AnnotationsModal } from './annotations/AnnotationsModal';
@@ -15,6 +17,7 @@ import { WebsitePanels } from './WebsitePanels';
 
 export function WebsitePage({ websiteId }: { websiteId: string }) {
   const [annotationRange, setAnnotationRange] = useState<AnnotationRange | null>(null);
+  const { t, labels } = useMessages();
 
   return (
     <Column gap>
@@ -30,6 +33,10 @@ export function WebsitePage({ websiteId }: { websiteId: string }) {
           onAnnotationMoreClick={setAnnotationRange}
           legendActions={<AnnotationsButton websiteId={websiteId} />}
         />
+      </Panel>
+      <Panel data-test="traffic-heatmap">
+        <Heading size="2xl">{t(labels.traffic)}</Heading>
+        <WeeklyTraffic websiteId={websiteId} />
       </Panel>
       <WebsitePanels websiteId={websiteId} />
       <ExpandedViewModal websiteId={websiteId} />

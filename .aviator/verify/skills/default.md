@@ -33,8 +33,12 @@ Targeting the wrapper directly types nothing and looks like a broken login.
 Submitting lands you on `/`, which renders `null` and then client-redirects to
 `/websites` — the websites list, or `/teams/<id>/websites` when a team was the
 last one opened. Wait for that redirect to settle; asserting on `/` catches an
-empty page. The websites table hydrates a beat after the route settles, so wait
-for its rows rather than reading it immediately.
+empty page. The websites list renders as a grid of cards
+(`[data-test="website-card"]`) by default — one per site, with visitors/views, the
+change vs the previous period and a 7-day visitors sparkline. The table-icon button
+above the grid switches to the table view (the choice is remembered in
+localStorage). The cards hydrate a beat after the route settles, so wait for them
+rather than reading the page immediately.
 
 Carry the `{{ secrets.* }}` placeholders into the sign-in step verbatim. The
 collector substitutes the real values at call time and fences them to the

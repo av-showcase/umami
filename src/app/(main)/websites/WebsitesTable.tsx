@@ -7,6 +7,7 @@ import { useMessages, useNavigation, useWebsiteListChartsQuery } from '@/compone
 import { SquarePen } from '@/components/icons';
 import { decodePunycodeDomain } from '@/lib/format';
 import { WebsiteSparkline } from './WebsiteSparkline';
+import { WebsiteCardGrid } from './WebsiteCard';
 
 export interface WebsitesTableProps extends DataTableProps {
   showActions?: boolean;
@@ -25,6 +26,10 @@ export function WebsitesTable({
   const chartsQuery = useWebsiteListChartsQuery(websiteIds);
   const charts = chartsQuery.data?.data || {};
   const isChartLoading = chartsQuery.isLoading && !chartsQuery.data;
+
+  if (props.displayMode === 'cards') {
+    return <WebsiteCardGrid data={data} charts={charts} showActions={showActions} />;
+  }
 
   return (
     <DataTable {...props} data={data}>

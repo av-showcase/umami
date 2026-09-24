@@ -9,10 +9,12 @@ export function WebsitesDataTable({
   userId,
   teamId,
   showActions = true,
+  defaultDisplayMode,
 }: {
   userId?: string;
   teamId?: string;
   showActions?: boolean;
+  defaultDisplayMode?: 'table' | 'cards';
 }) {
   const { user } = useLoginQuery();
   const queryResult = useUserWebsitesQuery({ userId: userId || user?.id, teamId });
@@ -30,7 +32,7 @@ export function WebsitesDataTable({
   );
 
   return (
-    <DataGrid query={queryResult} allowSearch allowPaging>
+    <DataGrid query={queryResult} allowSearch allowPaging defaultDisplayMode={defaultDisplayMode}>
       {({ data }) => (
         <WebsitesTable data={data} showActions={showActions} renderLink={renderLink} />
       )}

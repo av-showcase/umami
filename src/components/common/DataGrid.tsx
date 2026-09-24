@@ -39,6 +39,7 @@ export interface DataGridProps {
   autoFocus?: boolean;
   renderActions?: () => ReactNode;
   renderEmpty?: () => ReactNode;
+  defaultDisplayMode?: DisplayMode;
   children: ReactNode | ((data: any) => ReactNode);
 }
 
@@ -50,6 +51,7 @@ export function DataGrid({
   autoFocus,
   renderActions,
   renderEmpty = () => <Empty />,
+  defaultDisplayMode,
   children,
 }: DataGridProps) {
   const { t, labels } = useMessages();
@@ -63,7 +65,9 @@ export function DataGrid({
     return stored === 'table' || stored === 'cards' ? stored : null;
   });
 
-  const displayMode: DisplayMode | undefined = isMobile ? 'cards' : (userDisplayMode ?? undefined);
+  const displayMode: DisplayMode | undefined = isMobile
+    ? 'cards'
+    : (userDisplayMode ?? defaultDisplayMode);
 
   const handleToggleDisplayMode = () => {
     const next: DisplayMode = displayMode === 'cards' ? 'table' : 'cards';
