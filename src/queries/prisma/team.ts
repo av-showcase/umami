@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import redis from '@/lib/redis';
 import { sanitizeSortFilters } from '@/lib/sort';
 import type { PageResult, QueryFilters } from '@/lib/types';
+import { getWebsiteGroupDeletionSteps } from './websiteGroup';
 
 import TeamFindManyArgs = Prisma.TeamFindManyArgs;
 
@@ -189,6 +190,8 @@ export async function deleteTeam(teamId: string) {
   };
 
   if (cloudMode) {
+    const websiteGroupSteps = await getWebsiteGroupDeletionSteps({ teamId });
+
     return transaction([
       client.team.update({
         data: {
@@ -210,11 +213,14 @@ export async function deleteTeam(teamId: string) {
         where: { teamId, deletedAt: null },
       }),
       client.board.deleteMany({ where: { teamId } }),
+      ...websiteGroupSteps,
     ]).then(async result => {
       await invalidateRedis();
       return result;
     });
   }
+
+  const websiteGroupSteps = await getWebsiteGroupDeletionSteps({ teamId });
 
   return transaction([
     client.teamUser.deleteMany({
@@ -226,6 +232,7 @@ export async function deleteTeam(teamId: string) {
     client.link.deleteMany({ where: { teamId } }),
     client.pixel.deleteMany({ where: { teamId } }),
     client.board.deleteMany({ where: { teamId } }),
+    ...websiteGroupSteps,
     client.team.delete({
       where: {
         id: teamId,

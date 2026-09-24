@@ -10,11 +10,15 @@ import { WebsiteSparkline } from './WebsiteSparkline';
 
 export interface WebsitesTableProps extends DataTableProps {
   showActions?: boolean;
+  allowEdit?: boolean;
+  allowView?: boolean;
+  showGroupPath?: boolean;
   renderLink?: (row: any) => ReactNode;
 }
 
 export function WebsitesTable({
   showActions,
+  showGroupPath,
   renderLink,
   data = [],
   ...props
@@ -50,6 +54,11 @@ export function WebsitesTable({
           </Text>
         )}
       </DataColumn>
+      {showGroupPath && (
+        <DataColumn id="groupPath" label={t(labels.groupPath)}>
+          {(row: any) => row.groupPath ?? '—'}
+        </DataColumn>
+      )}
       <DataColumn
         id="chart"
         label={<span style={{ whiteSpace: 'normal' }}>{`${t(labels.visitors)} (7d)`}</span>}
