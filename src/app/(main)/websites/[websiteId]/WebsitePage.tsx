@@ -9,6 +9,7 @@ import type { AnnotationRange } from '@/lib/annotations';
 import { AnnotationsButton } from './annotations/AnnotationsButton';
 import { AnnotationsModal } from './annotations/AnnotationsModal';
 import { WebsiteChart } from './WebsiteChart';
+import { WebsiteChartMetricFilter } from './WebsiteChartMetricFilter';
 import { WebsiteControls } from './WebsiteControls';
 import { WebsiteMetricsBar } from './WebsiteMetricsBar';
 import { WebsitePanels } from './WebsitePanels';
@@ -21,7 +22,8 @@ export function WebsitePage({ websiteId }: { websiteId: string }) {
       <WebsiteControls websiteId={websiteId} allowBounceFilter={true} />
       <WebsiteMetricsBar websiteId={websiteId} showChange={true} />
       <Panel minHeight="520px">
-        <Row justifyContent="end">
+        <Row justifyContent="end" gap>
+          <WebsiteChartMetricFilter />
           <UnitFilter />
         </Row>
         <WebsiteChart
